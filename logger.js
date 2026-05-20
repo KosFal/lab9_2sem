@@ -1,23 +1,26 @@
-function log() {
+function log({ logger = console } = {}) {
     return function (fn) {
         return function (...args) {
+            const startTime = Date.now();
+            const timestamp = new Date().toISOString();
+
             try {
                 const result = fn.apply(this, args);
 
                 if (result && typeof result.then === 'function') {
                     return result.then(res => {
-                        console.log("Async resolve", fn.name, res);
+                        logger.log(`${timestamp} [ASYNC] ${fn.name} in ${Date.now() - startTime}ms`);
                         return res;
                     }).catch(err => {
-                        console.error("Async error", fn.name, err.message);
+                        logger.error(`${timestamp} [ERROR] ${fn.name} in ${Date.now() - startTime}ms`);
                         throw err;
                     });
                 }
 
-                console.log("Sync return", fn.name, result);
+                logger.log(`${timestamp} [SYNC] ${fn.name} in ${Date.now() - startTime}ms`);
                 return result;
             } catch (err) {
-                console.error("Sync error", fn.name, err.message);
+                logger.error(`${timestamp} [ERROR] ${fn.name} in ${Date.now() - startTime}ms`);
                 throw err;
             }
         };
